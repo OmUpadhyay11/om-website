@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* --- Logo ring animation --- */
+
+/* This keyframe rotates the ring from 0° to 720° (2 full spins) */
+@keyframes spinTwice {
+  from {
+    transform: rotate(0deg); /* Starting position */
+  }
+  to {
+    transform: rotate(720deg); /* 360 × 2 = 2 spins */
+  }
+}
+
+/* This class applies the animation to the ring */
+.spin-twice {
+  animation: spinTwice 1s linear forwards;
+  /* 
+    1s = animation speed
+    linear = same speed all the way
+    forwards = after finishing, stay in the final position instead of resetting
+  */
+
+  transform-origin: center;
+  /* Ensures the ring spins around its center point, not from a corner */
+}
