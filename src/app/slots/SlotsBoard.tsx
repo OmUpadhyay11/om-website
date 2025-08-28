@@ -1,73 +1,74 @@
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 /** Types */
 type Slot = {
+  slug: string; // route: /work/[slug]
   title: string;
   org: string;
   period?: string;
-  href?: string;
   cover: string;
-  summary?: string;
-  tags?: string[];
+  focus?: string;
 };
 
-/** Content — edit freely */
+/** Content */
 const projects: Slot[] = [
   {
-    title: "Pneumatic Hot Peening System",
-    org: "Personal / Lab",
-    period: "2025",
-    href: "https://github.com/omupadhyay11", // replace with real repo or write-up
-    cover:
-      "https://images.unsplash.com/photo-1581091013111-1b89a9c6b37e?q=80&w=1200&auto=format&fit=crop",
-    summary:
-      "End-to-end system for WAAM steel: sensors, analog signal conditioning, and control logic with robotics integration.",
-    tags: ["Robotics", "Sensors", "Control", "WAAM"],
+    slug: "interviewai",
+    title: "InterviewAI",
+    org: "SpeechDojo",
+    period: "2025 | Project",
+    cover: "/InterviewAI_Pic.png",
+    focus: "50% 40%",
+  },
+  {
+    slug: "loadcell-experiment",
+    title: "LoadCell Experiment",
+    org: "ADaMS Lab",
+    period: "2025 | Project",
+    cover: "/LoadCellPic_32.png",
+    focus: "center",
   },
 ];
 
 const experience: Slot[] = [
   {
+    slug: "adams-internship",
     title: "Mechatronics Systems & Manufacturing Intern",
     org: "ADaMS Lab (University of Alberta)",
-    period: "May–Aug 2025",
-    href: "#",
-    cover: "/adams-lab.png", // <— your new file path (relative to /public)
-    summary:
-      "Integrated load cells with pneumatic hammers; DAQ + control code; calibration workflow (R²>0.99); designed test rigs; ±1.5% FS repeatability.",
-    tags: ["DAQ", "Pneumatics", "Load Cells", "Python", "MATLAB", "Control"],
+    period: "May–Aug 2025 | Internship",
+    cover: "/Adams_Lab32.png",
+    focus: "center",
   },
   {
-    title: "Robotics Autonomy Engineer (WARG)",
+    slug: "colourific",
+    title: "Colourific",
     org: "University of Waterloo",
-    period: "2024–present",
-    href: "#",
-    cover:
-      "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1200&auto=format&fit=crop",
-    summary:
-      "Autonomy prototypes and flight-test tooling; contributed to CI and telemetry utilities.",
-    tags: ["Autonomy", "CI", "Tooling"],
+    period: "2024 | Project",
+    cover: "/Colourific32.png",
+    focus: "center",
   },
 ];
 
 /** Component */
 export default function SlotsBoard() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8">
+    <section className="w-full py-8 -mx-6 px-6 md:mx-auto md:max-w-7xl md:px-0">
       <h2 className="mb-8 text-3xl font-bold tracking-tight text-center">
         Projects &amp; Experience
       </h2>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Left: Projects */}
         <div>
           <ColumnHeader title="" />
           <div className="space-y-6">
-            {projects.map((s, i) => (
-              <SlotCard key={`proj-${i}`} {...s} />
+            {projects.map((s) => (
+              <SlotCard key={s.slug} {...s} />
             ))}
           </div>
         </div>
@@ -76,8 +77,8 @@ export default function SlotsBoard() {
         <div>
           <ColumnHeader title="" />
           <div className="space-y-6">
-            {experience.map((s, i) => (
-              <SlotCard key={`exp-${i}`} {...s} />
+            {experience.map((s) => (
+              <SlotCard key={s.slug} {...s} />
             ))}
           </div>
         </div>
@@ -88,36 +89,32 @@ export default function SlotsBoard() {
 
 /** Subcomponents */
 function ColumnHeader({ title }: { title: string }) {
+  if (!title) return null;
   return (
-    <div className="sticky top-0 z-10 -mx-4 mb-4 bg-black/60 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-black/40">
+    <div className="mb-4 px-1">
       <h3 className="text-xl font-semibold">{title}</h3>
     </div>
   );
 }
 
-function SlotCard({
-  title,
-  org,
-  period,
-  cover,
-  summary,
-  tags = [],
-  href = "#",
-}: Slot) {
+function SlotCard({ slug, title, org, period, cover, focus = "center" }: Slot) {
   return (
-    <a
-      href={href}
-      className="group block overflow-hidden rounded-2xl border border-white/10 bg-white/5 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+    <Link
+      href={`/work/${slug}`}
+      className="group block h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400/60"
     >
-      {/* Cover */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden">
-        <img
+      {/* 3:2 Fixed Aspect Ratio for Slot Covers */}
+      <div className="relative w-full overflow-hidden rounded-t-2xl aspect-[3/2]">
+        <Image
           src={cover}
           alt={`${title} cover`}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          style={{ objectPosition: focus }}
+          sizes="(min-width: 768px) 50vw, 100vw"
+          priority={false}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent opacity-80" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent" />
       </div>
 
       {/* Body */}
@@ -134,30 +131,15 @@ function SlotCard({
           </div>
           <ArrowUpRight className="mt-1 size-5 shrink-0 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
         </div>
-
-        {summary && <p className="mt-3 text-sm text-white/85">{summary}</p>}
-
-        {tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {tags.map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] tracking-wide text-white/80"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Subtle hover lift */}
+      {/* Subtle slot hover lift */}
       <motion.div
         aria-hidden
         initial={{ y: 0 }}
         whileHover={{ y: -2 }}
         transition={{ type: "spring", stiffness: 220, damping: 20 }}
       />
-    </a>
+    </Link>
   );
 }

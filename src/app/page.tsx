@@ -20,10 +20,10 @@ const playfair = Playfair_Display({
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white px-6 py-3">
-      {/* ===== Header (scrolls normally; preserves left offset + logo size) ===== */}
+      {/* Fixed Header and Logo Sizes */}
       <header className="w-full mb-12 -ml-6 -mr-6 pl-5 pr-0">
         <div className="flex flex-col gap-10 md:flex-row md:items-center md:justify-between">
-          {/* Left: Logo + Name + Icons */}
+          {/* Left Block: Logo + Name + Social MEdia Icons */}
           <div className="p-3 flex items-center gap-[3.75rem]">
             <Logo size={200} />
             <div className="flex flex-col items-center md:items-start">
@@ -64,7 +64,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: Bio + UW logo */}
+          {/* Right Block: Bio + UW Eng logo */}
           <div className="flex items-start md:items-center gap-0 md:gap-10">
             <p
               className={`${libre.className} text-white text-center md:text-center text-sm md:text-base leading-relaxed md:max-w-[56ch] lg:max-w-[68ch]`}
@@ -98,12 +98,12 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ===== Slots: Projects (left) + Experience (right) ===== */}
+      {/* Slots: Projects (left) + Experience (right)*/}
       <section id="slots" className="max-w-6xl mx-auto mt-6">
         <SlotsBoard />
       </section>
 
-      {/* ===== Bottom-right status footer ===== */}
+      {/* Last Updated Status Block, bottom right */}
       <div className="fixed bottom-4 right-4 z-50">
         <a
           className="group flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs md:text-sm text-white/90 shadow-lg backdrop-blur hover:bg-white/10"
