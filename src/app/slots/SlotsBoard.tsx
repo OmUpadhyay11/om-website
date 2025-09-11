@@ -19,7 +19,7 @@ type Slot = {
 const projects: Slot[] = [
   {
     slug: "interviewai",
-    title: "InterviewAI",
+    title: "Interview AI",
     org: "SpeechDojo",
     period: "2025 | Project",
     cover: "/InterviewAI_Pic.png",
@@ -27,7 +27,7 @@ const projects: Slot[] = [
   },
   {
     slug: "loadcell-experiment",
-    title: "LoadCell Experiment",
+    title: "Volt2Force",
     org: "ADaMS Lab",
     period: "2025 | Project",
     cover: "/LoadCellPic_32.png",
@@ -38,9 +38,9 @@ const projects: Slot[] = [
 const experience: Slot[] = [
   {
     slug: "adams-internship",
-    title: "Mechatronics Systems & Manufacturing Intern",
+    title: "Mechatronics Systems Intern",
     org: "ADaMS Lab (University of Alberta)",
-    period: "May–Aug 2025 | Internship",
+    period: "May – Aug 2025 | Internship",
     cover: "/Adams_Lab32.png",
     focus: "center",
   },
