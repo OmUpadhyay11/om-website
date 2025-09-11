@@ -143,12 +143,17 @@ const DETAILS: Record<string, Detail> = {
   },
 };
 
-export default function WorkDetail({ params }: { params: { slug: string } }) {
-  const data = DETAILS[params.slug];
+export default async function WorkDetail({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const data = DETAILS[slug];
   if (!data) return notFound();
 
   /** =============== INTERVIEWAI: simple in-progress layout =============== */
-  if (params.slug === "interviewai") {
+  if (slug === "interviewai") {
     const hero = data.hero;
 
     return (
@@ -239,7 +244,7 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
   }
 
   /** =============== ADaMS: custom centered flow (unchanged) =============== */
-  if (params.slug === "adams-internship") {
+  if (slug === "adams-internship") {
     const topImage = data.hero;
     const imgLeft = data.gallery?.[0] ?? data.hero;
     const imgRight = data.gallery?.[1] ?? data.hero;
@@ -345,7 +350,7 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
   }
 
   /** =============== COLOURIFIC: custom layout =============== */
-  if (params.slug === "colourific") {
+  if (slug === "colourific") {
     const hero = data.hero;
     const mid = "/Colourific_Pic.jpg";
 
@@ -459,7 +464,7 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
   }
 
   /** =============== VOLT2FORCE (loadcell-experiment): custom layout =============== */
-  if (params.slug === "loadcell-experiment") {
+  if (slug === "loadcell-experiment") {
     const hero = data.hero;
     const img1 = data.gallery?.[0] ?? data.hero; // row 1 (left)
     const img2 = data.gallery?.[1] ?? data.hero; // row 2 (right)
@@ -602,14 +607,12 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
 
         <header className="mb-8">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            {DETAILS[params.slug].title}
+            {DETAILS[slug].title}
           </h1>
           <p className="mt-2 text-white/70">
-            {DETAILS[params.slug].org}{" "}
-            {DETAILS[params.slug].period ? (
-              <span className="text-white/50">
-                • {DETAILS[params.slug].period}
-              </span>
+            {DETAILS[slug].org}{" "}
+            {DETAILS[slug].period ? (
+              <span className="text-white/50">• {DETAILS[slug].period}</span>
             ) : null}
           </p>
         </header>
@@ -617,8 +620,8 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
         {/* Hero */}
         <div className="relative mb-8 overflow-hidden rounded-2xl border border-white/10 aspect-[16/9]">
           <Image
-            src={DETAILS[params.slug].hero}
-            alt={`${DETAILS[params.slug].title} hero`}
+            src={DETAILS[slug].hero}
+            alt={`${DETAILS[slug].title} hero`}
             fill
             className="object-cover"
             sizes="(min-width: 1024px) 1024px, 100vw"
@@ -629,11 +632,11 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
         {/* Summary + tags */}
         <section className="mb-10">
           <p className="text-white/85 leading-relaxed">
-            {DETAILS[params.slug].summary}
+            {DETAILS[slug].summary}
           </p>
-          {DETAILS[params.slug].tags?.length ? (
+          {DETAILS[slug].tags?.length ? (
             <div className="mt-4 flex flex-wrap gap-2">
-              {DETAILS[params.slug].tags.map((t) => (
+              {DETAILS[slug].tags.map((t) => (
                 <span
                   key={t}
                   className="rounded-full border border-white/10 px-2 py-0.5 text-[12px] tracking-wide text-white/80"
@@ -646,18 +649,18 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
         </section>
 
         {/* Gallery */}
-        {DETAILS[params.slug].gallery?.length ? (
+        {DETAILS[slug].gallery?.length ? (
           <section className="mb-12">
             <h2 className="mb-4 text-xl font-semibold">Gallery</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {DETAILS[params.slug].gallery!.map((src, i) => (
+              {DETAILS[slug].gallery!.map((src, i) => (
                 <div
                   key={i}
                   className="relative aspect-[4/3] overflow-hidden rounded-xl border border-white/10"
                 >
                   <Image
                     src={src}
-                    alt={`${DETAILS[params.slug].title} image ${i + 1}`}
+                    alt={`${DETAILS[slug].title} image ${i + 1}`}
                     fill
                     className="object-cover"
                     sizes="(min-width: 768px) 50vw, 100vw"
@@ -673,8 +676,13 @@ export default function WorkDetail({ params }: { params: { slug: string } }) {
 }
 
 /** Metadata per project */
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const data = DETAILS[params.slug];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const data = DETAILS[slug];
   return {
     title: data ? `${data.title} — Om Upadhyay` : "Project — Om Upadhyay",
   };
