@@ -18,30 +18,58 @@ type Slot = {
 /** Content */
 const projects: Slot[] = [
   {
-    slug: "interviewai",
-    title: "Interview AI",
-    org: "SpeechDojo",
-    period: "2025 | Project",
-    cover: "/InterviewAI_Pic.png",
-    focus: "50% 40%",
+    slug: "robim",
+    title: "Robotics Engineering Intern",
+    org: "RoBIM Technologies",
+    period: "Jan - Apr 2026 | Internship",
+    cover: "/RoBIMLogo32.png",
+    focus: "center",
   },
+
+  {
+    slug: "plywood-cutting-project",
+    title: "Robotic CNC Machining Project",
+    org: "RoBIM Technologies",
+    period: "2026 | Project",
+    cover: "/PlywoodCNCProject.png",
+    focus: "center",
+  },
+
   {
     slug: "loadcell-experiment",
     title: "Volt2Force",
     org: "ADaMS Lab",
     period: "2025 | Project",
-    cover: "/LoadCellPic_32.png",
+    cover: "/Volt2Force.png",
     focus: "center",
   },
 ];
 
 const experience: Slot[] = [
   {
+    slug: "VisionHat-project",
+    title: "VisionHat AI",
+    org: "HackED2026",
+    period: "2026 | Project",
+    cover: "/VisionHat.png",
+    focus: "center",
+  },
+
+  {
+    slug: "interviewai",
+    title: "Interview AI",
+    org: "SpeechDojo",
+    period: "2025 | Project",
+    cover: "/InterviewAI_Pic.png",
+    focus: "center",
+  },
+
+  {
     slug: "adams-internship",
-    title: "Mechatronics Systems Intern",
+    title: "Mechatronics Systems Research Intern",
     org: "ADaMS Lab (University of Alberta)",
     period: "May – Aug 2025 | Internship",
-    cover: "/Adams_Lab32.png",
+    cover: "/ADAMSLab_New32.png",
     focus: "center",
   },
   {
@@ -122,10 +150,10 @@ function SlotCard({ slug, title, org, period, cover, focus = "center" }: Slot) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h4 className="text-lg font-semibold leading-tight">{title}</h4>
-            <p className="mt-0.5 text-sm text-white/70">
+            <p className="mt-0.5 text-sm text-white/100">
               {org}{" "}
               {period ? (
-                <span className="text-white/50">• {period}</span>
+                <span className="text-white/100">• {period}</span>
               ) : null}
             </p>
           </div>
