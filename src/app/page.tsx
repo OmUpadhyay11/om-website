@@ -20,7 +20,7 @@ const playfair = Playfair_Display({
 export default function Home() {
   return (
     <main
-      className={`min-h-screen bg-black text-white px-6 py-3 ${libre.className}`}
+      className={`min-h-screen bg-black relative text-white px-6 py-3 ${libre.className}`}
     >
       {/* Fixed Header and Logo Sizes */}
       <header className="w-full mb-12 -ml-6 -mr-6 pl-5 pr-0">
@@ -139,7 +139,7 @@ export default function Home() {
             <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </span>
-          <span>Last Updated: February 2026</span>
+          <span>Last Updated: March 2026</span>
         </a>
       </div>
     </main>

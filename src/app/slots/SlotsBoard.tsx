@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 /** Types */
 type Slot = {
-  slug: string; // route: /work/[slug]
+  slug: string;
   title: string;
   org: string;
   period?: string;
@@ -25,7 +25,6 @@ const projects: Slot[] = [
     cover: "/RoBIMLogo32.png",
     focus: "center",
   },
-
   {
     slug: "plywood-cutting-project",
     title: "Robotic CNC Machining Project",
@@ -34,7 +33,6 @@ const projects: Slot[] = [
     cover: "/PlywoodCNCProject.png",
     focus: "center",
   },
-
   {
     slug: "loadcell-experiment",
     title: "Volt2Force",
@@ -54,7 +52,6 @@ const experience: Slot[] = [
     cover: "/VisionHat.png",
     focus: "center",
   },
-
   {
     slug: "interviewai",
     title: "Interview AI",
@@ -63,7 +60,6 @@ const experience: Slot[] = [
     cover: "/InterviewAI_Pic.png",
     focus: "center",
   },
-
   {
     slug: "adams-internship",
     title: "Mechatronics Systems Research Intern",
@@ -129,10 +125,10 @@ function SlotCard({ slug, title, org, period, cover, focus = "center" }: Slot) {
   return (
     <Link
       href={`/work/${slug}`}
-      className="group block h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+      className="group block h-full overflow-hidden border border-black bg-white/5 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400/60"
     >
       {/* 3:2 Fixed Aspect Ratio for Slot Covers */}
-      <div className="relative w-full overflow-hidden rounded-t-2xl aspect-[3/2]">
+      <div className="relative w-full overflow-hidden aspect-[3/2]">
         <Image
           src={cover}
           alt={`${title} cover`}
@@ -150,11 +146,9 @@ function SlotCard({ slug, title, org, period, cover, focus = "center" }: Slot) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h4 className="text-lg font-semibold leading-tight">{title}</h4>
-            <p className="mt-0.5 text-sm text-white/100">
+            <p className="mt-0.5 text-sm text-white">
               {org}{" "}
-              {period ? (
-                <span className="text-white/100">• {period}</span>
-              ) : null}
+              {period ? <span className="text-white">• {period}</span> : null}
             </p>
           </div>
           <ArrowUpRight className="mt-1 size-5 shrink-0 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
