@@ -24,27 +24,182 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+html,
+body {
+  cursor: url("/cur116.cur"), auto;
+}
+
+a,
+button,
+[role="button"],
+input,
+textarea,
+select,
+label {
+  cursor: url("/cur116.cur"), pointer;
+}
 /* --- Logo ring animation --- */
 
-/* This keyframe rotates the ring from 0° to 720° (2 full spins) */
+/* Spin with gentle fade-out for smoother motion */
 @keyframes spinTwice {
   from {
-    transform: rotate(0deg); /* Starting position */
+    transform: translateZ(0) rotate(0deg);
+    opacity: 0.9;
   }
   to {
-    transform: rotate(720deg); /* 360 × 2 = 2 spins */
+    transform: translateZ(0) rotate(360deg);
+    opacity: 0;
   }
 }
 
 /* This class applies the animation to the ring */
 .spin-twice {
-  animation: spinTwice 1s linear forwards;
-  /* 
-    1s = animation speed
-    linear = same speed all the way
-    forwards = after finishing, stay in the final position instead of resetting
-  */
-
+  animation: spinTwice 1.8s linear forwards;
   transform-origin: center;
-  /* Ensures the ring spins around its center point, not from a corner */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-box: fill-box;
+}
+
+/* --- Name typewriter animation --- */
+@keyframes typeName {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes blinkCaret {
+  0%,
+  100% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+@keyframes moveCaret {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.typed-name {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 1.5;
+  padding-bottom: 0.08em;
+  clip-path: inset(0 100% 0 0);
+  animation: typeName 1.25s ease-out 0.1s 1 forwards;
+}
+
+.typed-name::after {
+  content: "";
+  position: absolute;
+  top: 0.14em;
+  bottom: 0.14em;
+  left: 0%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  animation:
+    moveCaret 1.25s ease-out 0.1s 1 forwards,
+    blinkCaret 0.75s step-end 1.4s 2;
+}
+
+.typed-bio-line {
+  position: relative;
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+  line-height: 1.5;
+  animation: typeName 1s ease-out 1 forwards;
+}
+
+.typed-bio-line::after {
+  content: "";
+  position: absolute;
+  top: 0.14em;
+  bottom: 0.14em;
+  left: 0%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  animation:
+    moveCaret 1s ease-out 1 forwards,
+    blinkCaret 0.75s step-end 2;
+}
+
+.typed-bio-line-1 {
+  animation-delay: 1.75s;
+}
+.typed-bio-line-1::after {
+  animation-delay: 1.75s, 2.8s;
+}
+
+.typed-bio-line-2 {
+  animation-delay: 2.95s;
+}
+.typed-bio-line-2::after {
+  animation-delay: 2.95s, 4s;
+}
+
+.typed-bio-line-3 {
+  animation-delay: 4.15s;
+}
+.typed-bio-line-3::after {
+  animation-delay: 4.15s, 5.2s;
+}
+
+.typed-tagline {
+  position: relative;
+  width: fit-content;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+  line-height: 1.35;
+  animation: typeName 1s ease-out 1.55s 1 forwards;
+}
+
+.typed-tagline::after {
+  content: "";
+  position: absolute;
+  top: 0.08em;
+  bottom: 0.08em;
+  left: 0%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  animation:
+    moveCaret 1s ease-out 1.55s 1 forwards,
+    blinkCaret 0.75s step-end 2.65s 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typed-name {
+    clip-path: inset(0 0 0 0);
+    animation: none;
+  }
+
+  .typed-name::after,
+  .typed-bio-line::after,
+  .typed-tagline::after {
+    display: none;
+  }
+
+  .typed-bio-line,
+  .typed-tagline {
+    clip-path: inset(0 0 0 0);
+    animation: none;
+  }
 }
