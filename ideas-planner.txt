@@ -1,11 +1,1 @@
-Ideas Planner
-============
 
-- Personal blog / writing section
-- upload photos for all locations on global gallery
-- make about me section better
-
-Resume:
-- hyperlinks to project pages on website
-- hyperlinks to company website
-- add a 4th robim bullet
