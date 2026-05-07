@@ -94,7 +94,7 @@ export default function AboutMeSection() {
             >
               <div className="rounded-xl border border-white/15 bg-zinc-800/70 p-4 md:p-5">
                 <p className="mx-auto max-w-4xl text-center text-sm leading-relaxed text-white/90 md:text-[15px]">
-                  I'm a mechatronics engineering student focused primarily on
+                I&apos;m a mechatronics engineering student focused primarily on
                   robotics, controls, and intelligent manufacturing systems. My
                   work spans embedded systems, computer vision, and humanoid
                   manipulation, with a focus on translating real world problems
