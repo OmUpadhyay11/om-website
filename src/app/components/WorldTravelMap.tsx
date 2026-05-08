@@ -24,7 +24,8 @@ const AUTO_ROTATE_MAX_ZOOM = MAP_WIDTH / (2 * BASE_GLOBE_SCALE);
 const DRAG_ROTATE_SENSITIVITY = 0.28;
 const INERTIA_DAMPING_PER_SEC = 3.1;
 const MIN_INERTIA_SPEED = 10;
-const PROJECTION_PRECISION = 1.15;
+// Slightly lower precision = fewer path segments; same look at this scale, less CPU per frame.
+const PROJECTION_PRECISION = 1.45;
 const ZOOM_INTERVAL_FACTOR = 1.35;
 const LABELS_AND_SPIN_OFFSET_INTERVALS = 2;
 const EARLIER_TRIGGER_FACTOR =
@@ -215,6 +216,8 @@ export default function WorldTravelMap() {
   const [isFlinging, setIsFlinging] = useState(false);
   const [zoomScale, setZoomScale] = useState(INITIAL_ZOOM_SCALE);
   const [rotation, setRotation] = useState<[number, number]>(INITIAL_ROTATION);
+  const [tabVisible, setTabVisible] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const selectedPhotoList = selectedLocation?.photos ?? [];
   const selectedPhotoIndex = selectedPhoto ? selectedPhotoList.indexOf(selectedPhoto) : -1;
@@ -254,11 +257,28 @@ export default function WorldTravelMap() {
     isFlinging: false,
     zoomScale: INITIAL_ZOOM_SCALE,
     hasOpenModal: false,
+    tabVisible: true,
+    prefersReducedMotion: false,
   });
 
   useEffect(() => {
     rotationRef.current = rotation;
   }, [rotation]);
+
+  useEffect(() => {
+    const onVisibility = () => setTabVisible(document.visibilityState === "visible");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMq = () => setPrefersReducedMotion(mq.matches);
+    onMq();
+    mq.addEventListener("change", onMq);
+    return () => mq.removeEventListener("change", onMq);
+  }, []);
 
   useEffect(() => {
     const el = mapContainerRef.current;
@@ -269,7 +289,7 @@ export default function WorldTravelMap() {
         const entry = entries[0];
         setIsInView(entry?.isIntersecting ?? false);
       },
-      { threshold: 0.12 },
+      { threshold: 0.12, rootMargin: "120px 0px" },
     );
 
     observer.observe(el);
@@ -331,17 +351,30 @@ export default function WorldTravelMap() {
       isFlinging,
       zoomScale,
       hasOpenModal: !!selectedLocation || !!selectedPhoto,
+      tabVisible,
+      prefersReducedMotion,
     };
-  }, [isInView, isDragging, isFlinging, zoomScale, selectedLocation, selectedPhoto]);
+  }, [
+    isInView,
+    isDragging,
+    isFlinging,
+    zoomScale,
+    selectedLocation,
+    selectedPhoto,
+    tabVisible,
+    prefersReducedMotion,
+  ]);
 
   useEffect(() => {
     let frameId = 0;
     let lastTs = 0;
-    const targetFrameMs = 1000 / 30; // run idle spin at 30fps for lower CPU load
+    const targetFrameMs = 1000 / 20; // ~20fps updates: fewer React commits, smoother overall page
 
     const tick = (ts: number) => {
       const state = autoRotateStateRef.current;
       const shouldAutoRotate =
+        state.tabVisible &&
+        !state.prefersReducedMotion &&
         state.isInView &&
         !state.isDragging &&
         !state.isFlinging &&
@@ -378,11 +411,32 @@ export default function WorldTravelMap() {
 
   useEffect(() => {
     if (!selectedLocation?.photos?.length) return;
-    // Preload gallery images to reduce lag when opening thumbnails/fullscreen.
-    selectedLocation.photos.forEach((src) => {
+    const photos = selectedLocation.photos;
+    // Prime the first row (up to 4) immediately so the grid paints fast; stagger the rest
+    // so we do not burst-download every full-resolution file at once.
+    const immediate = Math.min(4, photos.length);
+    for (let i = 0; i < immediate; i += 1) {
       const preloader = new window.Image();
-      preloader.src = src;
-    });
+      preloader.src = photos[i];
+    }
+    let cancelled = false;
+    const schedule = (fn: () => void) => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(fn, { timeout: 900 });
+      } else {
+        window.setTimeout(fn, 48);
+      }
+    };
+    const preloadFrom = (start: number) => {
+      if (cancelled || start >= photos.length) return;
+      const preloader = new window.Image();
+      preloader.src = photos[start];
+      schedule(() => preloadFrom(start + 1));
+    };
+    if (photos.length > immediate) schedule(() => preloadFrom(immediate));
+    return () => {
+      cancelled = true;
+    };
   }, [selectedLocation]);
 
   useEffect(() => {
@@ -766,9 +820,10 @@ export default function WorldTravelMap() {
                         alt={`${selectedLocation.name} photo ${index + 1}`}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                        sizes="(min-width: 1024px) 16vw, (min-width: 768px) 22vw, 42vw"
+                        sizes="(min-width: 1024px) 14vw, (min-width: 768px) 20vw, 42vw"
                         quality={65}
-                        loading="lazy"
+                        priority={index < 4}
+                        loading={index < 4 ? "eager" : "lazy"}
                       />
                     </button>
                   ))}
@@ -824,6 +879,7 @@ export default function WorldTravelMap() {
                 className="max-h-[85vh] w-full rounded-lg object-contain"
                 loading="eager"
                 decoding="async"
+                fetchPriority="high"
               />
             </div>
           </div>

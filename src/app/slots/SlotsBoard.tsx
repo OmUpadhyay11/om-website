@@ -7,7 +7,19 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-/** Types */
+/** Preload demo video once when user hovers project cards (no UI change). */
+const videoPreloadSet = new Set<string>();
+
+function preloadHeroVideoOnce(href: string) {
+  if (videoPreloadSet.has(href)) return;
+  videoPreloadSet.add(href);
+  if (typeof document === "undefined") return;
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "video";
+  link.href = href;
+  document.head.appendChild(link);
+}
 type Slot = {
   slug: string;
   title: string;
@@ -382,7 +394,11 @@ function SlotCard({
       <Link
         href={href}
         prefetch
-        onMouseEnter={prefetchDetailPage}
+        onMouseEnter={() => {
+          prefetchDetailPage();
+          if (slug === "humanoid-29dof-simulation") preloadHeroVideoOnce("/humanoid29DOF.mp4");
+          if (slug === "plywood-cutting-project") preloadHeroVideoOnce("/PlywoodCNCTimeLapse.mov");
+        }}
         onFocus={prefetchDetailPage}
         onTouchStart={prefetchDetailPage}
         className={cardClass}

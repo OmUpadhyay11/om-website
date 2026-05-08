@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Github } from "lucide-react";
+import HeroVideo from "../../components/HeroVideo";
 
 /** ─── Data model ─────────────────────────────────────────────── */
 type Detail = {
@@ -291,7 +292,7 @@ const DETAILS: Record<string, Detail> = {
       "/visionhat_tg.jpeg",
       "/visionhat_wiring.jpg",
     ],
-    githubUrl: "https://github.com/TODO-visionhat-repo",
+    githubUrl: "https://github.com/OmUpadhyay11/AI_VisionHat",
     layout: "visionhat",
   },
 };
@@ -353,14 +354,7 @@ function HeroMedia({ data }: { data: Detail }) {
       <div className="mx-auto mb-10 w-full max-w-4xl overflow-hidden bg-black">
         {/* Convert .MOV → .mp4 first:
             ffmpeg -i "public/PlywoodCNCTimeLapse.MOV" -vcodec h264 -acodec aac "public/PlywoodCNCTimeLapse.mp4" */}
-        <video
-          src={data.video}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="h-auto w-full"
-        />
+        <HeroVideo src={data.video} className="h-auto w-full" />
       </div>
     );
   }

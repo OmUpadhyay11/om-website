@@ -1,8 +1,18 @@
 // src/app/page.tsx
+import dynamic from "next/dynamic";
 import { Playfair_Display, Libre_Baskerville } from "next/font/google";
-import AboutMeSection from "./components/AboutMeSection";
 import HomeHeader from "./components/HomeHeader";
 import SlotsBoard from "./slots/SlotsBoard";
+
+const AboutMeSection = dynamic(() => import("./components/AboutMeSection"), {
+  loading: () => (
+    <div
+      className="mx-auto mt-5 w-full max-w-5xl min-h-[200px] rounded-2xl border border-white/10 bg-zinc-900/30"
+      aria-busy="true"
+      aria-label="Loading section"
+    />
+  ),
+});
 
 const libre = Libre_Baskerville({
   subsets: ["latin"],

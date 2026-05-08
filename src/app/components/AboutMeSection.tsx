@@ -1,11 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { FaBasketballBall, FaFutbol, FaUserNinja } from "react-icons/fa";
 import Image from "next/image";
-import WorldTravelMap from "./WorldTravelMap";
+
+const WorldTravelMap = dynamic(() => import("./WorldTravelMap"), {
+  loading: () => (
+    <div
+      className="min-h-[520px] w-full rounded-xl border border-white/15 bg-zinc-800/40"
+      aria-busy="true"
+      aria-label="Loading map"
+    />
+  ),
+});
 
 type SportIconKind = "soccer" | "taekwondo" | "basketball";
 
@@ -165,7 +175,10 @@ export default function AboutMeSection() {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl border border-white/15 bg-zinc-800/70 p-4 md:p-5">
+              <div
+                className="mt-4 rounded-xl border border-white/15 bg-zinc-800/70 p-4 md:p-5"
+                style={{ contentVisibility: "auto" }}
+              >
                 <WorldTravelMap />
               </div>
             </motion.div>
