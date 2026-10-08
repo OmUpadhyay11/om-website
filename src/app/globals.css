@@ -191,6 +191,19 @@ label {
     blinkCaret 0.75s step-end 2.65s 2;
 }
 
+/* Garage landing: pulsing glow for the pull cord handle and label dots */
+@keyframes garage-dot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.45);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .typed-name {
     clip-path: inset(0 0 0 0);

@@ -27,14 +27,37 @@ type Slot = {
   period?: string;
   cover: string;
   focus?: string;
+  /** How the cover fills its frame. Logos often need `contain`. */
+  coverFit?: "cover" | "contain";
   blurb?: string;
 };
 
 /** Content */
 const experiences: Slot[] = [
   {
+    slug: "magna",
+    title: "R&D Engineering Intern",
+    org: "Magna International",
+    period: "Sept 2026 - Present",
+    cover: "/magna-logo.png",
+    focus: "center",
+    blurb:
+      "Working at the Promatek Research Centre on advanced manufacturing R&D, supporting automation and process development across active programs.",
+  },
+  {
+    slug: "uw-formula-electric",
+    title: "Chassis Subteam Member",
+    org: "UW Formula Electric SAE",
+    period: "Sept 2025 - Present",
+    cover: "/uwfe-logo.png",
+    focus: "center",
+    coverFit: "contain",
+    blurb:
+      "Contributing to the University of Waterloo Formula Electric team — designing, building, and testing a formula-style electric race car for Formula SAE competition.",
+  },
+  {
     slug: "robim",
-    title: "Robotics R&D Engineering Intern",
+    title: "Engineering Design Intern",
     org: "RoBIM Technologies",
     period: "Jan - Apr 2026",
     cover: "/RoBIMLogo32.png",
@@ -57,7 +80,7 @@ const experiences: Slot[] = [
 const projects: Slot[] = [
   {
     slug: "humanoid-29dof-simulation",
-    title: "29-DOF Humanoid",
+    title: "29-DOF Humanoid Simulation",
     org: "",
     period: "2026 | Project",
     cover: "/new_humanoid2.png",
@@ -107,6 +130,8 @@ const projects: Slot[] = [
 
 function renderOrg(org: string) {
   let orgUrl: string | null = null;
+  if (org === "Magna International") orgUrl = "https://www.magna.com/company/company-information";
+  if (org === "UW Formula Electric SAE") orgUrl = "https://uwfsae.ca/";
   if (org === "RoBIM Technologies") orgUrl = "https://www.robimtech.com/";
   if (org === "Additive Design and Manufacturing Lab" || org === "ADaMS Lab") {
     orgUrl = "https://www.adams-lab.ca/";
@@ -126,11 +151,17 @@ function renderOrg(org: string) {
   );
 }
 
-/** Component — server component, no "use client" needed */
-export default function SlotsBoard() {
+type SlotsBoardProps = {
+  /** Which sections to render. Defaults to both, preserving the original page. */
+  sections?: Array<"experience" | "projects">;
+};
+
+export default function SlotsBoard({
+  sections = ["experience", "projects"],
+}: SlotsBoardProps) {
+  const showExperience = sections.includes("experience");
+  const showProjects = sections.includes("projects");
   const router = useRouter();
-  const [isExperienceCollapsed, setIsExperienceCollapsed] = useState(false);
-  const [isProjectsCollapsed, setIsProjectsCollapsed] = useState(false);
   const [expandedExperienceSlug, setExpandedExperienceSlug] = useState<string | null>(
     null,
   );
@@ -140,9 +171,6 @@ export default function SlotsBoard() {
       const custom = event as CustomEvent<string>;
       const target = custom.detail;
       if (target !== "experience" && target !== "projects") return;
-
-      if (target === "experience") setIsExperienceCollapsed(false);
-      if (target === "projects") setIsProjectsCollapsed(false);
 
       requestAnimationFrame(() => {
         const el = document.getElementById(target);
@@ -164,119 +192,76 @@ export default function SlotsBoard() {
   return (
     <section className="w-full py-5 -mx-6 px-6 md:mx-auto md:max-w-5xl md:px-0">
       <div className="space-y-5">
+        {showExperience && (
         <div id="experience" className="rounded-2xl border border-white/15 bg-zinc-900/70 p-3.5 backdrop-blur-sm md:p-5 scroll-mt-6">
-          <div className="mb-4">
-            <div className="relative text-center">
-              <h2 className="text-[23px] font-bold tracking-tight md:text-[27px]">
-                Experience
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsExperienceCollapsed((prev) => !prev)}
-                aria-expanded={!isExperienceCollapsed}
-                aria-controls="experience-content"
-                className="absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-full border border-cyan-300/35 bg-cyan-300/[0.08] p-2 text-cyan-100 transition-all duration-200 hover:border-cyan-200 hover:bg-cyan-300/[0.16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-              >
-                <motion.span
-                  animate={{ rotate: isExperienceCollapsed ? -90 : 0 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 30 }}
-                >
-                  <ChevronDown className="size-5" />
-                </motion.span>
-              </button>
-            </div>
+          <div className="mb-4 text-center">
+            <h2
+              className="text-[20px] tracking-[0.12em] uppercase md:text-[24px]"
+              style={{ fontFamily: "var(--font-michroma)" }}
+            >
+              Experience
+            </h2>
           </div>
 
-          <AnimatePresence initial={false}>
-            {!isExperienceCollapsed && (
+          <div id="experience-content" className="mx-auto max-w-2xl space-y-3.5 py-2">
+            {experiences.map((s, idx) => (
               <motion.div
-                id="experience-content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
-                className="overflow-hidden"
+                key={s.slug}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.22 }}
               >
-                <div className="mx-auto max-w-2xl space-y-3.5 py-2">
-                  {experiences.map((s, idx) => (
-                    <motion.div
-                      key={s.slug}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05, duration: 0.22 }}
-                    >
-                      <SlotCard
-                        {...s}
-                        compact
-                        expandable
-                        linkOrg
-                        expanded={expandedExperienceSlug === s.slug}
-                        onToggle={() =>
-                          setExpandedExperienceSlug((prev) =>
-                            prev === s.slug ? null : s.slug,
-                          )
-                        }
-                      />
-                    </motion.div>
-                  ))}
-                </div>
+                <SlotCard
+                  {...s}
+                  compact
+                  expandable
+                  linkOrg
+                  expanded={expandedExperienceSlug === s.slug}
+                  onToggle={() =>
+                    setExpandedExperienceSlug((prev) =>
+                      prev === s.slug ? null : s.slug,
+                    )
+                  }
+                />
               </motion.div>
-            )}
-          </AnimatePresence>
+            ))}
+          </div>
         </div>
+        )}
 
+        {showProjects && (
         <div id="projects" className="rounded-2xl border border-white/15 bg-zinc-900/70 p-3.5 backdrop-blur-sm md:p-5 scroll-mt-6">
-          <div className="mb-4">
-            <div className="relative text-center">
-              <h2 className="text-[23px] font-bold tracking-tight md:text-[27px]">
-                Projects
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsProjectsCollapsed((prev) => !prev)}
-                aria-expanded={!isProjectsCollapsed}
-                aria-controls="projects-content"
-                className="absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-full border border-cyan-300/35 bg-cyan-300/[0.08] p-2 text-cyan-100 transition-all duration-200 hover:border-cyan-200 hover:bg-cyan-300/[0.16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-              >
-                <motion.span
-                  animate={{ rotate: isProjectsCollapsed ? -90 : 0 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 30 }}
-                >
-                  <ChevronDown className="size-5" />
-                </motion.span>
-              </button>
-            </div>
+          <div className="mb-4 text-center">
+            <h2
+              className="text-[20px] tracking-[0.12em] uppercase md:text-[24px]"
+              style={{ fontFamily: "var(--font-michroma)" }}
+            >
+              Projects
+            </h2>
           </div>
 
-          <AnimatePresence initial={false}>
-            {!isProjectsCollapsed && (
-              <motion.div
-                id="projects-content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.34, ease: [0.22, 0.61, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <p className="mb-4 text-center text-[14px] text-white md:text-[15px]">
-                  Engineering builds, hackathons, and independent project work.
-                </p>
-                <div className="grid gap-5 px-2 py-1 md:grid-cols-2">
-                  {projects.map((s, idx) => (
-                    <motion.div
-                      key={s.slug}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 + 0.06, duration: 0.22 }}
-                    >
-                      <SlotCard {...s} />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div id="projects-content">
+            <p
+              className="mb-4 text-center text-[14px] text-white/90 md:text-[15px]"
+              style={{ fontFamily: "var(--font-chakra)" }}
+            >
+              Engineering builds, hackathons, and independent project work.
+            </p>
+            <div className="grid gap-5 px-2 py-1 md:grid-cols-2">
+              {projects.map((s, idx) => (
+                <motion.div
+                  key={s.slug}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 + 0.06, duration: 0.22 }}
+                >
+                  <SlotCard {...s} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
+        )}
       </div>
     </section>
   );
@@ -290,6 +275,7 @@ function SlotCard({
   period,
   cover,
   focus = "center",
+  coverFit = "cover",
   blurb,
   compact = false,
   expandable = false,
@@ -303,6 +289,10 @@ function SlotCard({
   expanded?: boolean;
   onToggle?: () => void;
 }) {
+  const coverClass =
+    coverFit === "contain"
+      ? "object-contain bg-white p-2 transition-transform duration-500 group-hover:scale-[1.03]"
+      : "object-cover transition-transform duration-500 group-hover:scale-[1.06]";
   const router = useRouter();
   const href = `/work/${slug}`;
 
@@ -334,7 +324,7 @@ function SlotCard({
                   src={cover}
                   alt={`${title} cover`}
                   fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                  className={coverClass}
                   style={{ objectPosition: focus }}
                   sizes="(min-width: 768px) 125px, 110px"
                   quality={100}
@@ -342,16 +332,32 @@ function SlotCard({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <div>
-                  <h4 className="text-center text-[19px] font-bold leading-tight text-white md:text-[21px]">
-                    {title}
-                  </h4>
-                  {period ? (
-                    <p className="mt-1 text-center text-[13px] font-normal text-white/85 md:text-[14px]">
-                      {period}
-                    </p>
-                  ) : null}
-                </div>
+                <h4
+                  className="text-center text-[16px] leading-tight tracking-[0.06em] text-white md:text-[18px]"
+                  style={{ fontFamily: "var(--font-michroma)" }}
+                >
+                  {title}
+                </h4>
+                {org || period ? (
+                  <div
+                    className="mt-1.5 flex items-baseline justify-center gap-3 text-[13px] font-normal text-white/85 md:gap-4 md:text-[14px]"
+                    style={{ fontFamily: "var(--font-chakra)" }}
+                  >
+                    {org ? (
+                      <span className="min-w-0 truncate">
+                        {linkOrg ? renderOrg(org) : org}
+                      </span>
+                    ) : null}
+                    {org && period ? (
+                      <span className="shrink-0 text-white/35" aria-hidden="true">
+                        ·
+                      </span>
+                    ) : null}
+                    {period ? (
+                      <span className="shrink-0 text-white/80">({period})</span>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
               <motion.span
                 animate={{ rotate: expanded ? 180 : 0 }}
@@ -373,7 +379,10 @@ function SlotCard({
                 className="overflow-hidden"
               >
                 <div className="border-t border-white/10 px-4 py-3 md:px-5">
-                  <p className="text-[13px] leading-relaxed text-white/95 md:text-sm">
+                  <p
+                    className="text-[13px] leading-relaxed text-white/95 md:text-sm"
+                    style={{ fontFamily: "var(--font-chakra)" }}
+                  >
                     {blurb}
                   </p>
                 </div>
@@ -410,7 +419,7 @@ function SlotCard({
                 src={cover}
                 alt={`${title} cover`}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                className={coverClass}
                 style={{ objectPosition: focus }}
                 sizes="(min-width: 768px) 125px, 110px"
                 quality={100}
@@ -418,16 +427,22 @@ function SlotCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <div>
-                <h4 className="text-center text-[19px] font-bold leading-tight text-white md:text-[21px]">
-                  {title}
-                </h4>
-                {period ? (
-                  <p className="mt-1 text-center text-[13px] font-normal text-white/85 md:text-[14px]">
-                    {period}
-                  </p>
-                ) : null}
-              </div>
+                <div>
+                  <h4
+                    className="text-center text-[16px] leading-tight tracking-[0.06em] text-white md:text-[18px]"
+                    style={{ fontFamily: "var(--font-michroma)" }}
+                  >
+                    {title}
+                  </h4>
+                  {period ? (
+                    <p
+                      className="mt-1 text-center text-[13px] font-normal text-white/85 md:text-[14px]"
+                      style={{ fontFamily: "var(--font-chakra)" }}
+                    >
+                      {period}
+                    </p>
+                  ) : null}
+                </div>
             </div>
           </div>
         ) : (
@@ -438,7 +453,7 @@ function SlotCard({
                 src={cover}
                 alt={`${title} cover`}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                className={coverClass}
                 style={{ objectPosition: focus }}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 priority={false}
@@ -447,8 +462,9 @@ function SlotCard({
               <div className="absolute inset-x-0 bottom-0 p-3.5 md:p-4">
                 <div className="text-center">
                   <h4
-                    className="inline-block text-[18px] font-bold leading-tight text-[#f6c453] md:text-[19px]"
+                    className="inline-block text-[15px] leading-tight tracking-[0.05em] text-[#f6c453] md:text-[16px]"
                     style={{
+                      fontFamily: "var(--font-michroma)",
                       WebkitTextStroke: "0.45px rgba(0,0,0,0.9)",
                       textShadow: "0 1px 1px rgba(0,0,0,0.55)",
                     }}

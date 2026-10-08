@@ -24,8 +24,8 @@ const AUTO_ROTATE_MAX_ZOOM = MAP_WIDTH / (2 * BASE_GLOBE_SCALE);
 const DRAG_ROTATE_SENSITIVITY = 0.28;
 const INERTIA_DAMPING_PER_SEC = 3.1;
 const MIN_INERTIA_SPEED = 10;
-// Slightly lower precision = fewer path segments; same look at this scale, less CPU per frame.
-const PROJECTION_PRECISION = 1.45;
+// Coarser paths = fewer SVG segments per frame. Fixed value (no mid-spin switching).
+const PROJECTION_PRECISION = 2.15;
 const ZOOM_INTERVAL_FACTOR = 1.35;
 const LABELS_AND_SPIN_OFFSET_INTERVALS = 2;
 const EARLIER_TRIGGER_FACTOR =
@@ -35,6 +35,8 @@ const AUTO_ROTATE_STOP_ZOOM = Math.max(
   AUTO_ROTATE_MAX_ZOOM / EARLIER_TRIGGER_FACTOR,
 );
 const PIN_LABELS_SHOW_ZOOM = AUTO_ROTATE_STOP_ZOOM;
+// Precompute once — recreating this every frame was wasted work.
+const GRATICULE = geoGraticule10();
 const COUNTRY_LABELS = [
   { name: "Canada", coordinates: [-106, 57] as [number, number] },
   { name: "USA", coordinates: [-97, 39] as [number, number] },
@@ -368,7 +370,7 @@ export default function WorldTravelMap() {
   useEffect(() => {
     let frameId = 0;
     let lastTs = 0;
-    const targetFrameMs = 1000 / 20; // ~20fps updates: fewer React commits, smoother overall page
+    const targetFrameMs = 1000 / 24; // ~24fps idle spin: smoother than 20, still cheap
 
     const tick = (ts: number) => {
       const state = autoRotateStateRef.current;
@@ -462,11 +464,20 @@ export default function WorldTravelMap() {
   );
 
   const path = useMemo(() => geoPath(projection), [projection]);
-  const graticulePath = useMemo(() => path(geoGraticule10()) ?? "", [path]);
+  const spherePath = useMemo(() => path({ type: "Sphere" }) ?? "", [path]);
+  const spinning = isDragging || isFlinging;
+  // Drop graticule while spinning — land + pins are what you track, and the grid is extra SVG work.
+  const graticulePath = useMemo(
+    () => (spinning ? "" : path(GRATICULE) ?? ""),
+    [path, spinning],
+  );
   const landPath = useMemo(() => (land ? path(land) ?? "" : ""), [land, path]);
+  // Country borders are the expensive mesh. Skip them while the globe is moving,
+  // and at default zoom — silhouette + pins read fine without them.
+  const showBorders = !spinning && zoomScale >= PIN_LABELS_SHOW_ZOOM;
   const bordersPath = useMemo(
-    () => (borders ? path(borders) ?? "" : ""),
-    [borders, path],
+    () => (showBorders && borders ? path(borders) ?? "" : ""),
+    [borders, path, showBorders],
   );
 
   const projectedPins = useMemo(() => {
@@ -488,6 +499,7 @@ export default function WorldTravelMap() {
   }, [projection, rotation]);
 
   const projectedCountryLabels = useMemo(() => {
+    if (spinning) return [];
     const center: [number, number] = [-rotation[0], -rotation[1]];
 
     return COUNTRY_LABELS.map((label) => ({
@@ -504,7 +516,7 @@ export default function WorldTravelMap() {
         isFrontFacing: true;
       } => !!item.point && item.isFrontFacing,
     );
-  }, [projection, rotation]);
+  }, [projection, rotation, spinning]);
 
   useEffect(() => {
     if (isInView) return;
@@ -684,8 +696,16 @@ export default function WorldTravelMap() {
   return (
     <div className="mt-5">
       <div className="mb-3 text-center">
-        <p className="text-lg font-semibold text-white md:text-xl">Global Gallery</p>
-        <p className="mt-1 text-[13px] text-white/90 md:text-sm">
+        <p
+          className="text-[18px] tracking-[0.12em] uppercase text-white md:text-[22px]"
+          style={{ fontFamily: "var(--font-michroma)" }}
+        >
+          Global Gallery
+        </p>
+        <p
+          className="mt-1 text-[13px] text-white/90 md:text-sm"
+          style={{ fontFamily: "var(--font-chakra)" }}
+        >
           <span className="relative -top-[2px] mr-1 inline-block leading-none text-[21px]">🗺️</span>
           Click on the pins to see Earth through my lens{" "}
           <span className="relative -top-[2px] inline-block leading-none text-[21px]">📷</span>
@@ -735,7 +755,10 @@ export default function WorldTravelMap() {
               onClick={(event) => event.stopPropagation()}
             >
               <div className="relative mb-3 flex items-center justify-center px-12 md:px-16">
-                <p className="text-center text-base font-semibold text-white md:text-lg">
+                <p
+                  className="text-center text-[15px] tracking-[0.06em] text-white md:text-[17px]"
+                  style={{ fontFamily: "var(--font-michroma)" }}
+                >
                   {selectedLocation.name}
                   {selectedLocation.name === "Hawaii, USA" ? (
                     <span className="text-[13px] font-medium text-white/85 md:text-[15px]">
@@ -900,143 +923,133 @@ export default function WorldTravelMap() {
               <stop offset="45%" stopColor="#16335f" />
               <stop offset="100%" stopColor="#0a1327" />
             </radialGradient>
-            <filter id="globeShadow" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow
-                dx="0"
-                dy="8"
-                stdDeviation="9"
-                floodColor="#030712"
-                floodOpacity="0.6"
-              />
-            </filter>
-            <filter id="pinGlow" x="-220%" y="-220%" width="440%" height="440%">
-              <feDropShadow
-                dx="0"
-                dy="0.8"
-                stdDeviation="1.1"
-                floodColor="#ef4444"
-                floodOpacity="0.42"
-              />
-            </filter>
           </defs>
 
-          <g filter="url(#globeShadow)">
+          {/* Soft shadow without SVG filters (filters reflow every path change). */}
+          <ellipse
+            cx={MAP_WIDTH / 2}
+            cy={MAP_HEIGHT / 2 + 14}
+            rx={BASE_GLOBE_SCALE * zoomScale * 0.98}
+            ry={BASE_GLOBE_SCALE * zoomScale * 0.92}
+            fill="rgba(3,7,18,0.45)"
+            className="pointer-events-none"
+          />
+
+          <path
+            d={spherePath}
+            fill="url(#globeOcean)"
+            stroke="#4a6598"
+            strokeWidth={1.6}
+          />
+          <path d={graticulePath} fill="none" stroke="#6484bd" strokeOpacity={0.24} strokeWidth={0.55} />
+
+          {landPath ? (
             <path
-              d={path({ type: "Sphere" }) ?? ""}
-              fill="url(#globeOcean)"
-              stroke="#4a6598"
-              strokeWidth={1.6}
+              d={landPath}
+              fill="#1b2a46"
+              stroke="#5f79ac"
+              strokeWidth={0.52}
             />
-            <path d={graticulePath} fill="none" stroke="#6484bd" strokeOpacity={0.24} strokeWidth={0.55} />
+          ) : null}
+          {bordersPath ? (
+            <path
+              d={bordersPath}
+              fill="none"
+              stroke="#5f79ac"
+              strokeOpacity={0.72}
+              strokeWidth={0.36}
+            />
+          ) : null}
 
-            {landPath ? (
-              <path
-                d={landPath}
-                fill="#1b2a46"
-                stroke="#5f79ac"
-                strokeWidth={0.52}
-              />
-            ) : null}
-            {bordersPath ? (
-              <path
-                d={bordersPath}
-                fill="none"
-                stroke="#5f79ac"
-                strokeOpacity={0.72}
-                strokeWidth={0.36}
-              />
-            ) : null}
+          {projectedCountryLabels.map((label) => (
+            <text
+              key={label.name}
+              x={label.point[0]}
+              y={label.point[1]}
+              textAnchor="middle"
+              className="pointer-events-none select-none"
+              fill="rgba(220,238,255,0.9)"
+              fontSize={Math.max(11, 12.5 / Math.sqrt(Math.max(zoomScale, 1)))}
+              fontWeight={600}
+              letterSpacing="0.02em"
+              stroke="rgba(9,16,32,0.88)"
+              strokeWidth={2.4}
+              paintOrder="stroke"
+            >
+              {label.name}
+            </text>
+          ))}
 
-            {projectedCountryLabels.map((label) => (
+          {projectedPins.map(({ location, point }) => {
+            const isSelected = selectedLocation?.name === location.name;
+            const normalizedZoom = Math.max(zoomScale, 1);
+            const pinScale = Math.max(
+              0.9,
+              (isSelected ? 1.18 : 1.08) / Math.pow(normalizedZoom, 0.2),
+            );
+            const selectedRadius = Math.max(6, 10 / Math.sqrt(normalizedZoom));
+
+            return (
+              <g
+                key={location.name}
+                transform={`translate(${point[0]}, ${point[1]})`}
+                className="cursor-pointer"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => selectLocation(location)}
+              >
+                <circle
+                  r={16}
+                  fill="transparent"
+                  onPointerDown={(event) => event.stopPropagation()}
+                />
+                {isSelected && (
+                  <>
+                    <circle r={selectedRadius} fill="rgba(239,68,68,0.18)" />
+                    <circle
+                      r={selectedRadius + 2.4}
+                      fill="none"
+                      stroke="rgba(255,255,255,0.7)"
+                      strokeWidth={0.9}
+                    />
+                  </>
+                )}
+                <g transform={`scale(${pinScale})`}>
+                  <circle cx="0" cy="-2" r="11" fill="rgba(239,68,68,0.2)" />
+                  <path
+                    d="M0 -10 C5.2 -10 8.8 -6.4 8.8 -2 C8.8 2.4 5.4 6.1 0 13 C-5.4 6.1 -8.8 2.4 -8.8 -2 C-8.8 -6.4 -5.2 -10 0 -10 Z"
+                    fill="#ff4d4f"
+                    stroke="rgba(255,255,255,0.95)"
+                    strokeWidth="1.1"
+                  />
+                  <circle cx="0" cy="-2.7" r="2.25" fill="rgba(255,255,255,0.96)" />
+                </g>
+              </g>
+            );
+          })}
+
+          {zoomScale >= PIN_LABELS_SHOW_ZOOM &&
+            projectedPins.map(({ location, point }) => (
               <text
-                key={label.name}
-                x={label.point[0]}
-                y={label.point[1]}
+                key={`${location.name}-label`}
+                x={point[0]}
+                y={point[1] + 18}
                 textAnchor="middle"
                 className="pointer-events-none select-none"
-                fill="rgba(220,238,255,0.9)"
-                fontSize={Math.max(11, 12.5 / Math.sqrt(Math.max(zoomScale, 1)))}
-                fontWeight={600}
-                letterSpacing="0.02em"
-                stroke="rgba(9,16,32,0.88)"
-                strokeWidth={2.4}
+                fill="rgba(255,255,255,0.9)"
+                fontSize={Math.max(9, 10 / Math.sqrt(Math.max(zoomScale, 1)))}
+                stroke="rgba(0,0,0,0.8)"
+                strokeWidth={2}
                 paintOrder="stroke"
               >
-                {label.name}
+                {location.name.split(",")[0]}
               </text>
             ))}
-
-            {projectedPins.map(({ location, point }) => {
-              const isSelected = selectedLocation?.name === location.name;
-              const normalizedZoom = Math.max(zoomScale, 1);
-              const pinScale = Math.max(
-                0.9,
-                (isSelected ? 1.18 : 1.08) / Math.pow(normalizedZoom, 0.2),
-              );
-              const selectedRadius = Math.max(6, 10 / Math.sqrt(normalizedZoom));
-
-              return (
-                <g
-                  key={location.name}
-                  transform={`translate(${point[0]}, ${point[1]})`}
-                  className="cursor-pointer"
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={() => selectLocation(location)}
-                >
-                  {/* Larger invisible hit target makes pins much easier to click. */}
-                  <circle
-                    r={16}
-                    fill="transparent"
-                    onPointerDown={(event) => event.stopPropagation()}
-                  />
-                  {isSelected && (
-                    <>
-                      <circle r={selectedRadius} fill="rgba(239,68,68,0.18)" />
-                      <circle
-                        r={selectedRadius + 2.4}
-                        fill="none"
-                        stroke="rgba(255,255,255,0.7)"
-                        strokeWidth={0.9}
-                      />
-                    </>
-                  )}
-                  <g transform={`scale(${pinScale})`} filter="url(#pinGlow)">
-                    <path
-                      d="M0 -10 C5.2 -10 8.8 -6.4 8.8 -2 C8.8 2.4 5.4 6.1 0 13 C-5.4 6.1 -8.8 2.4 -8.8 -2 C-8.8 -6.4 -5.2 -10 0 -10 Z"
-                      fill="#ff4d4f"
-                      stroke="rgba(255,255,255,0.95)"
-                      strokeWidth="1.1"
-                    />
-                    <circle cx="0" cy="-2.7" r="2.25" fill="rgba(255,255,255,0.96)" />
-                  </g>
-                </g>
-              );
-            })}
-
-            {zoomScale >= PIN_LABELS_SHOW_ZOOM &&
-              projectedPins.map(({ location, point }) => (
-                <text
-                  key={`${location.name}-label`}
-                  x={point[0]}
-                  y={point[1] + 18}
-                  textAnchor="middle"
-                  className="pointer-events-none select-none"
-                  fill="rgba(255,255,255,0.9)"
-                  fontSize={Math.max(9, 10 / Math.sqrt(Math.max(zoomScale, 1)))}
-                  stroke="rgba(0,0,0,0.8)"
-                  strokeWidth={2}
-                  paintOrder="stroke"
-                >
-                  {location.name.split(",")[0]}
-                </text>
-              ))}
-            <path
-              d={path({ type: "Sphere" }) ?? ""}
-              fill="none"
-              stroke="rgba(103,193,255,0.24)"
-              strokeWidth={7}
-            />
-          </g>
+          <path
+            d={spherePath}
+            fill="none"
+            stroke="rgba(103,193,255,0.24)"
+            strokeWidth={7}
+          />
         </svg>
       </div>
 

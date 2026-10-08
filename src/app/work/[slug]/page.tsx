@@ -162,7 +162,7 @@ const DETAILS: Record<string, Detail> = {
   },
 
   "humanoid-29dof-simulation": {
-    title: "29-DOF Humanoid",
+    title: "29-DOF Humanoid Simulation",
     org: "",
     period: "2026 | Project",
     hero: "/Humanoid_Sim.png",
@@ -198,7 +198,7 @@ const DETAILS: Record<string, Detail> = {
   },
 
   robim: {
-    title: "Robotics R&D Engineering Intern",
+    title: "Engineering Design Intern",
     org: "RoBIM Technologies",
     period: "Jan - Apr 2026 | Internship",
     hero: "/robim-hero.png",
@@ -303,7 +303,7 @@ function BackButton() {
   return (
     <div className="mb-6">
       <Link
-        href="/"
+        href="/projects"
         className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-white transition hover:bg-blue-500 active:bg-blue-700"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -1104,6 +1104,10 @@ function DetailLayout({ data }: { data: Detail }) {
 }
 
 /** ─── Page ───────────────────────────────────────────────────── */
+export function generateStaticParams() {
+  return Object.keys(DETAILS).map((slug) => ({ slug }));
+}
+
 export default async function WorkDetail({
   params,
 }: {
